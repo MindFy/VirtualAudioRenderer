@@ -97,44 +97,54 @@ int g_cTemplates = sizeof(g_Templates) / sizeof(g_Templates[0]);
 
 STDAPI DllRegisterServer()
 {
-	HRESULT hResult = AMovieDllRegisterServer2(TRUE);
-	if (SUCCEEDED(hResult))
+	HRESULT hResult = CoInitialize(NULL);
+	if (hResult == S_OK)
 	{
-		CComPtr<IFilterMapper2> pFilterMapper;
-		if (SUCCEEDED(pFilterMapper.CoCreateInstance(CLSID_FilterMapper2)))
+		hResult = AMovieDllRegisterServer2(TRUE);
+		if (SUCCEEDED(hResult))
 		{
-			REGPINTYPES* pPinMediaTypes = new REGPINTYPES[2];
-			pPinMediaTypes[0].clsMajorType = &MEDIATYPE_Audio;
-			pPinMediaTypes[0].clsMinorType = &MEDIASUBTYPE_IEEE_FLOAT;
-			pPinMediaTypes[1].clsMajorType = &MEDIATYPE_Audio;
-			pPinMediaTypes[1].clsMinorType = &MEDIASUBTYPE_PCM;
-			const REGFILTERPINS2 Pins =
+			CComPtr<IFilterMapper2> pFilterMapper;
+			if (SUCCEEDED(pFilterMapper.CoCreateInstance(CLSID_FilterMapper2)))
 			{
-				REG_PINFLAG_B_RENDERER,
-				1,
-				2,
-				pPinMediaTypes,
-				0,
-				nullptr,
-				&CLSID_AudioRendererCategory
-			};
-			const REGFILTER2 Filter =
-			{
-				2,
-				MERIT_DO_NOT_USE,
-				1,
-				reinterpret_cast<const REGFILTERPINS*>(&Pins)
-			};
-			hResult = pFilterMapper->RegisterFilter(
-				CLSID_VirtualAudioRender,		// Filter CLSID. 
-				g_pszName,						// Filter name.
-				NULL,							// Device moniker. 
-				&CLSID_AudioRender,				// Video compressor category.
-				g_pszName,						// Instance data.
-				&Filter						// Pointer to filter information.
-			);
-			delete[] pPinMediaTypes;
+				static const REGPINTYPES g_pPinMediaTypes[2] =
+				{
+					{
+						&MEDIATYPE_Audio,
+						&MEDIASUBTYPE_IEEE_FLOAT
+					},
+					{
+						&MEDIATYPE_Audio,
+						&MEDIASUBTYPE_PCM
+					}
+				};
+				const static REGFILTERPINS2 g_Pins =
+				{
+					REG_PINFLAG_B_RENDERER,
+					1,
+					2,
+					g_pPinMediaTypes,
+					0,
+					nullptr,
+					&CLSID_AudioRendererCategory
+				};
+				static const REGFILTER2 g_Filter =
+				{
+					2,
+					MERIT_DO_NOT_USE,
+					1,
+					reinterpret_cast<const REGFILTERPINS*>(&g_Pins)
+				};
+				hResult = pFilterMapper->RegisterFilter(
+					CLSID_VirtualAudioRender,		// Filter CLSID. 
+					g_pszName,						// Filter name.
+					NULL,							// Device moniker. 
+					&CLSID_AudioRender,				// Video compressor category.
+					g_pszName,						// Instance data.
+					&g_Filter						// Pointer to filter information.
+				);
+			}
 		}
+		CoUninitialize();
 	}
 	return hResult;
 }

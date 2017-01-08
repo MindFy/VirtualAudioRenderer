@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-// File: DlleEntry.cpp
+// File: DllEntry.cpp
 //
 // Desc: DirectShow base classes - implements classes used to support dll
 //       entry points for COM objects.
