@@ -162,7 +162,7 @@ STDAPI DllRegisterServer()
 					CLSID_VirtualAudioRender,		// Filter CLSID. 
 					g_pszName,						// Filter name.
 					NULL,							// Device moniker. 
-					&CLSID_AudioRender,				// Video compressor category.
+					&CLSID_AudioRendererCategory,	// Video compressor category.
 					g_pszName,						// Instance data.
 					&g_Filter						// Pointer to filter information.
 				);
