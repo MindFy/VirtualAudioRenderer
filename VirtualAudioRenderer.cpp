@@ -95,12 +95,35 @@ CFactoryTemplate g_Templates[1] =
 
 int g_cTemplates = sizeof(g_Templates) / sizeof(g_Templates[0]);
 
+#ifdef _DEBUG
+#define CHECK_FUNCTION(hResult, pFunctionName)\
+{\
+	wchar_t pError[1024];\
+	if (SUCCEEDED(hResult))\
+	{\
+		wsprintf(pError, L"%s: %s succeeded", g_pszName, pFunctionName); \
+		OutputDebugString(pError);\
+	}\
+	else\
+	{\
+		wsprintf(pError, L"%s: %s failed with 0x%08x", g_pszName, pFunctionName, hResult);\
+		OutputDebugString(pError);\
+	}\
+}
+#else
+#define CHECK_FUNCTION(hResult, pFunctionName)
+#endif
 STDAPI DllRegisterServer()
 {
+#ifdef _DEBUG
+	OutputDebugString(L"Virtual Audio Renderer: Entering DllRegisterServer\n");
+#endif
 	HRESULT hResult = CoInitialize(NULL);
-	if (hResult == S_OK)
+	CHECK_FUNCTION(hResult, L"CoInitialize");
+	if (SUCCEEDED(hResult))
 	{
 		hResult = AMovieDllRegisterServer2(TRUE);
+		CHECK_FUNCTION(hResult, L"AMovieDllRegisterServer2");
 		if (SUCCEEDED(hResult))
 		{
 			CComPtr<IFilterMapper2> pFilterMapper;
@@ -134,6 +157,7 @@ STDAPI DllRegisterServer()
 					1,
 					reinterpret_cast<const REGFILTERPINS*>(&g_Pins)
 				};
+				CHECK_FUNCTION(hResult, L"IFilterMapper2::RegisterFilter");
 				hResult = pFilterMapper->RegisterFilter(
 					CLSID_VirtualAudioRender,		// Filter CLSID. 
 					g_pszName,						// Filter name.
@@ -146,6 +170,9 @@ STDAPI DllRegisterServer()
 		}
 		CoUninitialize();
 	}
+#ifdef _DEBUG
+	OutputDebugString(L"Virtual Audio Renderer: Leaving DllRegisterServer\n");
+#endif
 	return hResult;
 }
 
